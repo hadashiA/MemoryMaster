@@ -101,6 +101,7 @@ private:
     
 } /* end of namespace MemoryMaster */
 
+#ifdef MM_OVERRIDE_OPERATOR
 inline void* operator new(std::size_t size) {
     return mm::MemoryMaster::Instance().Alloc(size, "Unknown", 0);
 }
@@ -120,5 +121,6 @@ inline void operator delete(void* deletePtr) {
 inline void operator delete[](void* deletePtr) {
     ::operator delete(deletePtr);
 }
+#endif
 
 #endif  /* defined(__mm__memory_master__) */
