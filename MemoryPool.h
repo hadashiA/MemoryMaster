@@ -4,7 +4,7 @@
 #include <memory>
 #include <cstdlib>
 
-namespace MemoryPool {
+namespace mm {
 
 static const int DEFAULT_EXPAND_SIZE = 10000;
 

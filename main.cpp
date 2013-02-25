@@ -16,7 +16,7 @@ public:
 
 class TestAppendMemoryPool :
   public Base,
-  public MemoryPool::AppendMemoryPool<Test, 10000>
+  public mm::AppendMemoryPool<Test, 10000>
 {
 public:
   TestAppendMemoryPool() {}
@@ -40,14 +40,14 @@ int main() {
     TestAppendMemoryPool* ptr;
     for (int j = 0; j < 10000; ++j) {
       for (int i = 0; i < 10000; ++i) {
-        ptr = new TestAppendMemoryPool;
+          ptr = new TestAppendMemoryPool;
         delete ptr;
       }
     }
   }
   {
     boost::progress_timer t;
-    MemoryPool::MakeMemoryPool<Test, 10000> mp;
+    mm::MakeMemoryPool<Test, 10000> mp;
     Test* ptr;
     for (int j = 0; j < 10000; ++j) {
       for (int i = 0; i < 10000; ++i) {

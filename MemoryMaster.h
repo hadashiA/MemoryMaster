@@ -8,12 +8,12 @@
 #include "MemoryPool.h"
 // #define USE_GENERAL_MEMORY_POOL
 
-namespace MemoryMaster{
+namespace mm {
 
 struct MemoryList {
 #ifdef USE_GENERAL_MEMORY_POOL
-    static MemoryPool::GeneralMemoryPool& Gmp() {
-        static MemoryPool::GeneralMemoryPool __instance;
+    static mm::GeneralMemoryPool& Gmp() {
+        static mm::GeneralMemoryPool __instance;
         return __instance;
     }
 #endif
@@ -101,11 +101,11 @@ MemoryList *MemoryList::memory = NULL;
 } /* end of namespace MemoryMaster */
 
 inline void* operator new(std::size_t size) {
-    return MemoryMaster::memAlloc(size, "Unknown", 0);
+    return mm::memAlloc(size, "Unknown", 0);
 }
 
 inline void* operator new(std::size_t size, const char* name, int line) {
-    return MemoryMaster::memAlloc(size, name, line);
+    return mm::memAlloc(size, name, line);
 }
 
 inline void* operator new[](std::size_t size, const char* name, int line) {
@@ -113,7 +113,7 @@ inline void* operator new[](std::size_t size, const char* name, int line) {
 }
 
 inline void operator delete(void* deletePtr) {
-    MemoryMaster::memFree(deletePtr);
+    mm::memFree(deletePtr);
 }
 
 inline void operator delete[](void* deletePtr) {
@@ -121,3 +121,6 @@ inline void operator delete[](void* deletePtr) {
 }
 
 #endif
+
+
+
