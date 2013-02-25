@@ -11,6 +11,13 @@
 namespace MemoryMaster{
 
 struct MemoryList {
+#ifdef USE_GENERAL_MEMORY_POOL
+    static MemoryPool::GeneralMemoryPool& Gmp() {
+        static MemoryPool::GeneralMemoryPool __instance;
+        return __instance;
+    }
+#endif
+
     std::size_t size;
     const char* fileName;
     int lineNo;
@@ -23,7 +30,7 @@ struct MemoryList {
 static inline void* memAlloc(std::size_t size, const char* name, int line) {
     void* allocPtr = NULL;
 #ifdef USE_GENERAL_MEMORY_POOL
-    allocPtr = MemoryList::gmp.poolAlloc(size + sizeof(MemoryList));
+    allocPtr = MemoryList::Gmp().poolAlloc(size + sizeof(MemoryList));
     if (allocPtr) {
         MemoryList* current = static_cast<MemoryList*>(allocPtr);
         current->size = size;
@@ -62,7 +69,7 @@ static inline void memFree(void* freePtr) {
 
 #ifdef USE_GENERAL_MEMORY_POOL
     if (current->usePool) {
-        MemoryList::gmp.poolFree(current, current->size + sizeof(MemoryList));
+        MemoryList::Gmp().poolFree(current, current->size + sizeof(MemoryList));
         return;
     }
 #endif
@@ -89,9 +96,7 @@ static inline void leakReport() {
     }
 }
 
-#ifdef USE_GENERAL_MEMORY_POOL
-extern MemoryPool::GeneralMemoryPool MemoryList::gmp;
-#endif
+MemoryList *MemoryList::memory = NULL;
 
 } /* end of namespace MemoryMaster */
 
