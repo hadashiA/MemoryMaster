@@ -11,101 +11,102 @@
 namespace mm {
 
 struct MemoryList {
-#ifdef MM_USE_GENERAL_MEMORY_POOL
-    static mm::GeneralMemoryPool& Gmp() {
-        static mm::GeneralMemoryPool __instance;
-        return __instance;
-    }
-#endif
-
     std::size_t size;
     const char* fileName;
     int lineNo;
     bool usePool;
     MemoryList* next;
-
-    static MemoryList* memory;
 };
 
-static inline void* memAlloc(std::size_t size, const char* name, int line) {
-    void* allocPtr = NULL;
+class MemoryMaster {
+public:
+    static MemoryMaster& Instance() {
+        static MemoryMaster __instance;
+        return __instance;
+    }
+
+    MemoryMaster() : memory_list_(NULL), general_pool_() {}
+
+    void *Alloc(std::size_t size, const char* name, int line) {
+        void* allocPtr = NULL;
 #ifdef MM_USE_GENERAL_MEMORY_POOL
-    allocPtr = MemoryList::Gmp().poolAlloc(size + sizeof(MemoryList));
-    if (allocPtr) {
+        allocPtr = general_pool_.poolAlloc(size + sizeof(MemoryList));
+        if (allocPtr) {
+            MemoryList* current = static_cast<MemoryList*>(allocPtr);
+            current->size = size;
+            current->fileName = name;
+            current->lineNo = line;
+            current->usePool = true;
+            return static_cast<void*>(static_cast<char*>(allocPtr) + sizeof(MemoryList));
+        }
+#endif
+
+        allocPtr = std::malloc(size + sizeof(MemoryList));
+        assert(allocPtr);
         MemoryList* current = static_cast<MemoryList*>(allocPtr);
+        current->next = NULL;
+
+        if (!memory_list_) {
+            memory_list_ = current;
+        } else {
+            MemoryList *last = memory_list_;
+            while (last->next) {
+                last = last->next;
+            }
+            last->next = current;
+        }
         current->size = size;
         current->fileName = name;
         current->lineNo = line;
-        current->usePool = true;
+        current->usePool = false;
         return static_cast<void*>(static_cast<char*>(allocPtr) + sizeof(MemoryList));
     }
-#endif
 
-    allocPtr = std::malloc(size + sizeof(MemoryList));
-    assert(allocPtr);
-    MemoryList* current = static_cast<MemoryList*>(allocPtr);
-    current->next = NULL;
-
-    if (!MemoryList::memory) {
-        MemoryList::memory = current;
-    }
-    else {
-        MemoryList* last = MemoryList::memory;
-        while (last->next) {
-            last = last->next;
-        }
-        last->next = current;
-    }
-    current->size = size;
-    current->fileName = name;
-    current->lineNo = line;
-    current->usePool = false;
-    return static_cast<void*>(static_cast<char*>(allocPtr) + sizeof(MemoryList));
-}
-
-static inline void memFree(void* freePtr) {
-    MemoryList* current =
-        reinterpret_cast<MemoryList*>(static_cast<char*>(freePtr) - sizeof(MemoryList));
+    void Free(void *freePtr) {
+        MemoryList* current =
+            reinterpret_cast<MemoryList*>(static_cast<char*>(freePtr) - sizeof(MemoryList));
 
 #ifdef MM_USE_GENERAL_MEMORY_POOL
-    if (current->usePool) {
-        MemoryList::Gmp().poolFree(current, current->size + sizeof(MemoryList));
-        return;
-    }
+        if (current->usePool) {
+            general_pool_.poolFree(current, current->size + sizeof(MemoryList));
+            return;
+        }
 #endif
 
-    if (MemoryList::memory == current) {
-        MemoryList::memory = current->next;
-    }
-    else {
-        for (MemoryList* p = MemoryList::memory; p; p = p->next) {
-            if (p->next == current) {
-                p->next = current->next;
+        if (memory_list_ == current) {
+            memory_list_ = current->next;
+        } else {
+            for (MemoryList *p = memory_list_; p; p = p->next) {
+                if (p->next == current) {
+                    p->next = current->next;
+                }
             }
         }
+        std::free(current);
     }
-    std::free(current);
-}
 
-static inline void leakReport() {
-    for (MemoryList* ptr = MemoryList::memory; ptr; ptr = ptr->next) {
-        std::cout << "FileName : "<< ptr->fileName
-                  << ", LineNo(" << ptr->lineNo << ")"
-                  << ", Size(" << ptr->size << ")"
-                  << std::endl;
+    void leakReport() {
+        for (MemoryList* ptr = memory_list_; ptr; ptr = ptr->next) {
+            std::cout << "FileName : "<< ptr->fileName
+                      << ", LineNo(" << ptr->lineNo << ")"
+                      << ", Size(" << ptr->size << ")"
+                      << std::endl;
+        }
     }
-}
 
-MemoryList *MemoryList::memory = NULL;
-
+private:
+    MemoryList *memory_list_;
+    GeneralMemoryPool general_pool_;
+};
+    
 } /* end of namespace MemoryMaster */
 
 inline void* operator new(std::size_t size) {
-    return mm::memAlloc(size, "Unknown", 0);
+    return mm::MemoryMaster::Instance().Alloc(size, "Unknown", 0);
 }
 
 inline void* operator new(std::size_t size, const char* name, int line) {
-    return mm::memAlloc(size, name, line);
+    return mm::MemoryMaster::Instance().Alloc(size, name, line);
 }
 
 inline void* operator new[](std::size_t size, const char* name, int line) {
@@ -113,7 +114,7 @@ inline void* operator new[](std::size_t size, const char* name, int line) {
 }
 
 inline void operator delete(void* deletePtr) {
-    mm::memFree(deletePtr);
+    mm::MemoryMaster::Instance().Free(deletePtr);
 }
 
 inline void operator delete[](void* deletePtr) {
