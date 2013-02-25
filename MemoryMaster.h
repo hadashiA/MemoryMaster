@@ -80,7 +80,7 @@ static inline void memFree(void* freePtr) {
     std::free(current);
 }
 
-void leakReport() {
+static inline void leakReport() {
     for (MemoryList* ptr = MemoryList::memory; ptr; ptr = ptr->next) {
         std::cout << "FileName : "<< ptr->fileName
                   << ", LineNo(" << ptr->lineNo << ")"
