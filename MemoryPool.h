@@ -1,14 +1,16 @@
-#ifndef _MEMORY_POOL_H_
-#define _MEMORY_POOL_H_
+#ifndef __mm__memory_pool__
+#define __mm__memory_pool__
 
 #include <memory>
 #include <cstdlib>
 
+#ifndef MM_DEFAULT_EXPAND_SIZE
+#define MM_DEFAULT_EXPAND_SIZE 10000
+#endif
+
 namespace mm {
 
-static const int DEFAULT_EXPAND_SIZE = 10000;
-
-template <class T, std::size_t Size = DEFAULT_EXPAND_SIZE>
+template <class T, std::size_t Size = MM_DEFAULT_EXPAND_SIZE>
 class MemoryPool {
 public:
     MemoryPool() : next(0) {
@@ -55,7 +57,7 @@ private:
     MemoryPool<T, Size>* next;
 };
 
-template <class T, std::size_t Size = DEFAULT_EXPAND_SIZE>
+template <class T, std::size_t Size = MM_DEFAULT_EXPAND_SIZE>
 class AppendMemoryPool {
 public:
     void* operator new(std::size_t size) { return pool->alloc(size); }
@@ -69,7 +71,7 @@ private:
     static std::auto_ptr<MemoryPool<T, Size> > pool;
 };
 
-template <class T, std::size_t Size = DEFAULT_EXPAND_SIZE>
+template <class T, std::size_t Size = MM_DEFAULT_EXPAND_SIZE>
 class MakeMemoryPool {
 public:
     MakeMemoryPool() : pool(new MemoryPool<T, Size>) {}
@@ -131,4 +133,4 @@ std::auto_ptr<MemoryPool<T, Size> > AppendMemoryPool<T, Size>::pool;
 
 } /* end of namespace MemoryPool */
 
-#endif
+#endif  /* defined(__mm__memory_pool__) */

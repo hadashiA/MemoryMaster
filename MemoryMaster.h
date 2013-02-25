@@ -1,5 +1,5 @@
-#ifndef _MEMORY_MASTER_H_
-#define _MEMORY_MASTER_H_
+#ifndef __mm__memory_master__
+#define __mm__memory_master__
 
 #include <iostream>
 #include <cstdlib>
@@ -11,7 +11,7 @@
 namespace mm {
 
 struct MemoryList {
-#ifdef USE_GENERAL_MEMORY_POOL
+#ifdef MM_USE_GENERAL_MEMORY_POOL
     static mm::GeneralMemoryPool& Gmp() {
         static mm::GeneralMemoryPool __instance;
         return __instance;
@@ -29,7 +29,7 @@ struct MemoryList {
 
 static inline void* memAlloc(std::size_t size, const char* name, int line) {
     void* allocPtr = NULL;
-#ifdef USE_GENERAL_MEMORY_POOL
+#ifdef MM_USE_GENERAL_MEMORY_POOL
     allocPtr = MemoryList::Gmp().poolAlloc(size + sizeof(MemoryList));
     if (allocPtr) {
         MemoryList* current = static_cast<MemoryList*>(allocPtr);
@@ -67,7 +67,7 @@ static inline void memFree(void* freePtr) {
     MemoryList* current =
         reinterpret_cast<MemoryList*>(static_cast<char*>(freePtr) - sizeof(MemoryList));
 
-#ifdef USE_GENERAL_MEMORY_POOL
+#ifdef MM_USE_GENERAL_MEMORY_POOL
     if (current->usePool) {
         MemoryList::Gmp().poolFree(current, current->size + sizeof(MemoryList));
         return;
@@ -120,7 +120,4 @@ inline void operator delete[](void* deletePtr) {
     ::operator delete(deletePtr);
 }
 
-#endif
-
-
-
+#endif  /* defined(__mm__memory_master__) */
