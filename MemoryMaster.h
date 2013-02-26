@@ -6,7 +6,6 @@
 #include <cassert>
 
 #include "MemoryPool.h"
-// #define USE_GENERAL_MEMORY_POOL
 
 namespace mm {
 

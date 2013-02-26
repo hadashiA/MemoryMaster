@@ -47,7 +47,7 @@ int main() {
   }
   {
     boost::progress_timer t;
-    mm::MakeMemoryPool<Test, 10000> mp;
+    mm::PoolableFactory<Test, 10000> mp;
     Test* ptr;
     for (int j = 0; j < 10000; ++j) {
       for (int i = 0; i < 10000; ++i) {

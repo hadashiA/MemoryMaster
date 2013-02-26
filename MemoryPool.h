@@ -72,10 +72,10 @@ private:
 };
 
 template <class T, std::size_t Size = MM_DEFAULT_EXPAND_SIZE>
-class MakeMemoryPool {
+class PoolableFactory {
 public:
-    MakeMemoryPool() : pool(new MemoryPool<T, Size>) {}
-    ~MakeMemoryPool() {}
+    PoolableFactory() : pool(new MemoryPool<T, Size>) {}
+    ~PoolableFactory() {}
 
     T* poolNew() {
         T* allocPtr = static_cast<T*>(pool->alloc(sizeof(T)));
