@@ -16,7 +16,7 @@ template <class T, std::size_t Size = MM_DEFAULT_EXPAND_SIZE>
 class MemoryPool {
 public:
     MemoryPool() : next(0) {
-        expandFreeList(Size);
+        ExpandFreeList(Size);
     }
 
     ~MemoryPool() {
@@ -27,28 +27,28 @@ public:
         }
     }
 
-    void* alloc(std::size_t) {
-        if (!next) expandFreeList(Size);
+    void *Alloc(std::size_t) {
+        if (!next) ExpandFreeList(Size);
         MemoryPool<T, Size>* head = next;
         next = head->next;
         return head;
     }
 
-    void free(void* freePtr) {
-        MemoryPool<T, Size>* head = static_cast<MemoryPool<T, Size>*>(freePtr);
+    void Free(void *doomed) {
+        MemoryPool<T, Size>* head = static_cast<MemoryPool<T, Size>*>(doomed);
         head->next = next;
         next = head;
     }
 
 private:
-    void expandFreeList(int howMany) {
+    void ExpandFreeList(int how_many) {
         std::size_t size =
             (sizeof(T) > sizeof(MemoryPool<T, Size>*)) ? sizeof(T) : sizeof(MemoryPool<T, Size>*);
 
         MemoryPool<T, Size>* runner = reinterpret_cast<MemoryPool<T, Size>*>(std::malloc(size));
         next = runner;
 
-        for (int i = 0; i < howMany; ++i) {
+        for (int i = 0; i < how_many; ++i) {
             runner->next = reinterpret_cast<MemoryPool<T, Size>*>(std::malloc(size));
             runner = runner->next;
         }
@@ -62,12 +62,12 @@ private:
 template <class T, std::size_t Size = MM_DEFAULT_EXPAND_SIZE>
 class Poolable {
 public:
-    void* operator new(std::size_t size) { return pool->alloc(size); }
-    void operator delete(void* deletePtr, std::size_t) { pool->free(deletePtr); }
-    void* operator new[](std::size_t size) { return pool->alloc(size); }
-    void operator delete[](void* deletePtr, std::size_t) { pool->free(deletePtr); }
+    void *operator new(std::size_t size) { return pool->Alloc(size); }
+    void operator delete(void* deletePtr, std::size_t) { pool->Free(deletePtr); }
+    void *operator new[](std::size_t size) { return pool->Alloc(size); }
+    void operator delete[](void* deletePtr, std::size_t) { pool->Free(deletePtr); }
 
-    static void init() { pool.reset(new MemoryPool<T, Size>); }
+    static void Init() { pool.reset(new MemoryPool<T, Size>); }
 private:
     static unique_ptr<MemoryPool<T, Size> > pool;
 };
@@ -75,21 +75,21 @@ private:
 template <class T, std::size_t Size = MM_DEFAULT_EXPAND_SIZE>
 class PoolableFactory {
 public:
-    PoolableFactory() : pool(new MemoryPool<T, Size>) {}
+    PoolableFactory() : pool_(new MemoryPool<T, Size>) {}
     ~PoolableFactory() {}
 
-    T* poolNew() {
-        T* allocPtr = static_cast<T*>(pool->alloc(sizeof(T)));
-        return static_cast<T*>(new(allocPtr) T());
+    T *New() {
+        T *allocated = static_cast<T*>(pool_->Alloc(sizeof(T)));
+        return static_cast<T*>(new(allocated) T());
     }
 
-    void poolDelete(T* deletePtr) {
-        deletePtr->~T();
-        pool->free(deletePtr);
+    void Delete(T *doomed) {
+        doomed->~T();
+        pool_->Free(doomed);
     }
 
 private:
-    unique_ptr<MemoryPool<T, Size> > pool;
+    unique_ptr<MemoryPool<T, Size> > pool_;
 };
 
 struct DataPool16 { char data[16]; };
@@ -103,22 +103,22 @@ public:
     GeneralMemoryPool() {}
     ~GeneralMemoryPool() {}
 
-    void* poolAlloc(std::size_t size) {
-        void* allocPtr = NULL;
-        if (size < 16) { allocPtr = mp16.alloc(size); }
-        else if (size < 32) { allocPtr = mp32.alloc(size); }
-        else if (size < 64) { allocPtr = mp64.alloc(size); }
-        else if (size < 128) { allocPtr = mp128.alloc(size); }
-        else if (size < 256) { allocPtr = mp256.alloc(size); }
-        return allocPtr;
+    void *Alloc(std::size_t size) {
+        void *allocated = NULL;
+        if (size < 16) { allocated = mp16.Alloc(size); }
+        else if (size < 32) { allocated = mp32.Alloc(size); }
+        else if (size < 64) { allocated = mp64.Alloc(size); }
+        else if (size < 128) { allocated = mp128.Alloc(size); }
+        else if (size < 256) { allocated = mp256.Alloc(size); }
+        return allocated;
     }
 
-    void poolFree(void* freePtr, std::size_t size) {
-        if (size < 16) { mp16.free(freePtr); }
-        else if (size < 32) { mp32.free(freePtr); }
-        else if (size < 64) { mp64.free(freePtr); }
-        else if (size < 128) { mp128.free(freePtr); }
-        else if (size < 256) { mp256.free(freePtr); }
+    void Free(void *doomed, std::size_t size) {
+        if (size < 16) { mp16.Free(doomed); }
+        else if (size < 32) { mp32.Free(doomed); }
+        else if (size < 64) { mp64.Free(doomed); }
+        else if (size < 128) { mp128.Free(doomed); }
+        else if (size < 256) { mp256.Free(doomed); }
     }
 
 private:

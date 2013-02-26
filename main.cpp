@@ -36,7 +36,7 @@ int main() {
   }
   {
     boost::progress_timer t;
-    TestAppendMemoryPool::init();
+    TestAppendMemoryPool::Init();
     TestAppendMemoryPool* ptr;
     for (int j = 0; j < 10000; ++j) {
       for (int i = 0; i < 10000; ++i) {
@@ -51,8 +51,8 @@ int main() {
     Test* ptr;
     for (int j = 0; j < 10000; ++j) {
       for (int i = 0; i < 10000; ++i) {
-        ptr = mp.poolNew();
-        mp.poolDelete(ptr);
+        ptr = mp.New();
+        mp.Delete(ptr);
       }
     }
   }

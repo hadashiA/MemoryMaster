@@ -29,7 +29,7 @@ public:
     void *Alloc(std::size_t size, const char* name, int line) {
         void* allocPtr = NULL;
 #ifdef MM_USE_GENERAL_MEMORY_POOL
-        allocPtr = general_pool_.poolAlloc(size + sizeof(MemoryList));
+        allocPtr = general_pool_.Alloc(size + sizeof(MemoryList));
         if (allocPtr) {
             MemoryList* current = static_cast<MemoryList*>(allocPtr);
             current->size = size;
@@ -67,7 +67,7 @@ public:
 
 #ifdef MM_USE_GENERAL_MEMORY_POOL
         if (current->usePool) {
-            general_pool_.poolFree(current, current->size + sizeof(MemoryList));
+            general_pool_.Free(current, current->size + sizeof(MemoryList));
             return;
         }
 #endif
