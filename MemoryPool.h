@@ -10,6 +10,8 @@
 
 namespace mm {
 
+using std::unique_ptr;
+
 template <class T, std::size_t Size = MM_DEFAULT_EXPAND_SIZE>
 class MemoryPool {
 public:
@@ -66,9 +68,8 @@ public:
     void operator delete[](void* deletePtr, std::size_t) { pool->free(deletePtr); }
 
     static void init() { pool.reset(new MemoryPool<T, Size>); }
-
 private:
-    static std::auto_ptr<MemoryPool<T, Size> > pool;
+    static unique_ptr<MemoryPool<T, Size> > pool;
 };
 
 template <class T, std::size_t Size = MM_DEFAULT_EXPAND_SIZE>
@@ -88,7 +89,7 @@ public:
     }
 
 private:
-    std::auto_ptr<MemoryPool<T, Size> > pool;
+    unique_ptr<MemoryPool<T, Size> > pool;
 };
 
 struct DataPool16 { char data[16]; };
@@ -129,14 +130,8 @@ private:
 };
 
 template <class T, std::size_t Size>
-std::auto_ptr<MemoryPool<T, Size> > Poolable<T, Size>::pool;
+unique_ptr<MemoryPool<T, Size> > Poolable<T, Size>::pool;
 
 } /* end of namespace MemoryPool */
 
 #endif  /* defined(__mm__memory_pool__) */
-
-
-
-
-
-
