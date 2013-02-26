@@ -58,7 +58,7 @@ private:
 };
 
 template <class T, std::size_t Size = MM_DEFAULT_EXPAND_SIZE>
-class AppendMemoryPool {
+class Poolable {
 public:
     void* operator new(std::size_t size) { return pool->alloc(size); }
     void operator delete(void* deletePtr, std::size_t) { pool->free(deletePtr); }
@@ -129,8 +129,14 @@ private:
 };
 
 template <class T, std::size_t Size>
-std::auto_ptr<MemoryPool<T, Size> > AppendMemoryPool<T, Size>::pool;
+std::auto_ptr<MemoryPool<T, Size> > Poolable<T, Size>::pool;
 
 } /* end of namespace MemoryPool */
 
 #endif  /* defined(__mm__memory_pool__) */
+
+
+
+
+
+

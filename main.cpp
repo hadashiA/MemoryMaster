@@ -16,7 +16,7 @@ public:
 
 class TestAppendMemoryPool :
   public Base,
-  public mm::AppendMemoryPool<Test, 10000>
+  public mm::Poolable<Test, 10000>
 {
 public:
   TestAppendMemoryPool() {}
